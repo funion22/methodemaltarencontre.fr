@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz, quel dragueur rat&eacute; es-tu ? | Méthode Malta</title>
+<meta name="description" content="Un quiz rapide et honn&ecirc;te pour savoir quel profil de dragueur tu es vraiment.">
+<link rel="canonical" href="https://methodemaltarencontre.fr/quiz.html">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="Quiz, quel dragueur rat&eacute; es-tu ? | Méthode Malta">
+<meta property="og:description" content="Un quiz rapide et honn&ecirc;te pour savoir quel profil de dragueur tu es vraiment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Permanent+Marker&family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="logo" href="index.html">M&eacute;thode <span>Malta</span></a>
+    <nav class="main-nav">
+      <a href="methode.html">La M&eacute;thode</a>
+      <a href="blog/index.html">Blog</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="a-propos.html">&Agrave; propos</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <article class="wrap article-page quiz-page">
+    <p class="kicker">Le quiz</p>
+    <h1>Quel dragueur rat&eacute; es-tu ?</h1>
+    <p class="lead">Sept questions, zero jugement (enfin, un petit peu quand meme). Reponds honnetement.</p>
+
+    <div id="quiz-root"></div>
+  </article>
+</main>
+<script>
+const QUESTIONS = [
+  {
+    q: "Ta premiere phrase pour aborder quelqu'un, c'est plutot :",
+    a: [
+      {t: "Un compliment avec une petite pique dedans", pts: {negging: 2}},
+      {t: "Une remarque sur ce qui se passe autour de vous deux", pts: {naturel: 2}},
+      {t: "Une phrase que tu as repetee dans ta tete dix fois avant", pts: {script: 2}},
+      {t: "Tu attends surtout un signe avant de parler", pts: {timide: 2}},
+    ]
+  },
+  {
+    q: "Face a un silence dans la conversation, tu :",
+    a: [
+      {t: "Paniques et sors n'importe quoi pour le combler", pts: {script: 2}},
+      {t: "Le laisses exister, ce n'est pas la fin du monde", pts: {naturel: 2}},
+      {t: "En profites pour glisser une remarque plus mordante", pts: {negging: 2}},
+      {t: "Regardes ailleurs en esperant que ca passe", pts: {timide: 2}},
+    ]
+  },
+  {
+    q: "Un coach en seduction te propose un stage a 400 euros, tu :",
+    a: [
+      {t: "Tu y crois a fond, ca doit marcher", pts: {script: 2}},
+      {t: "Tu ris et tu passes ton chemin", pts: {naturel: 2}},
+      {t: "Tu demandes s'ils enseignent le negging", pts: {negging: 2}},
+      {t: "Tu hesites une semaine avant de decider", pts: {timide: 2}},
+    ]
+  },
+  {
+    q: "Apres un rejet, ta reaction interieure ressemble a :",
+    a: [
+      {t: "Une remise en question totale de ta valeur", pts: {timide: 2}},
+      {t: "Un haussement d'epaules, au suivant", pts: {naturel: 2}},
+      {t: "Une analyse de ce qui a cloche dans ton script", pts: {script: 2}},
+      {t: "Une envie de la remettre a sa place", pts: {negging: 2}},
+    ]
+  },
+  {
+    q: "En soiree, tu preferes :",
+    a: [
+      {t: "Suivre un plan precis d'approche", pts: {script: 2}},
+      {t: "Danser et voir ce qui se passe", pts: {naturel: 2}},
+      {t: "Rester avec tes amis, plus rassurant", pts: {timide: 2}},
+      {t: "Tester une petite remarque bien sentie", pts: {negging: 2}},
+    ]
+  },
+];
+
+const RESULTS = {
+  script: {
+    title: "Le Recite-Par-Coeur",
+    text: "Tu as surement lu ou regarde beaucoup de contenu de coachs, et ca se sent un peu trop. La bonne nouvelle : le naturel, ca s'apprend aussi, juste differemment."
+  },
+  negging: {
+    title: "Le Negger malgre lui",
+    text: "Tu penses jouer finement, mais cote face, ca se lit surtout comme un manque d'assurance. Un vrai compliment marche mieux qu'une pique deguisee."
+  },
+  timide: {
+    title: "Le Spectateur",
+    text: "Tu observes plus que tu n'agis, souvent par peur du rejet. Le probleme n'est pas ta technique, c'est la place que tu laisses au rejet dans ta tete."
+  },
+  naturel: {
+    title: "Le Presque-la",
+    text: "Tu es sur la bonne voie, tu restes toi-meme la plupart du temps. Il te reste juste a lacher encore un peu plus le controle."
+  },
+};
+
+let currentQ = 0;
+let scores = {script: 0, negging: 0, timide: 0, naturel: 0};
+
+function render() {
+  const root = document.getElementById('quiz-root');
+  if (currentQ >= QUESTIONS.length) {
+    let best = Object.keys(scores).reduce((a, b) => scores[a] >= scores[b] ? a : b);
+    let r = RESULTS[best];
+    root.innerHTML = '<div class="quiz-result"><h2>' + r.title + '</h2><p>' + r.text + '</p><a class="btn-outline" href="methode.html">Decouvrir la methode Malta</a></div>';
+    return;
+  }
+  let q = QUESTIONS[currentQ];
+  let html = '<div class="quiz-question"><h3>' + q.q + '</h3><div class="quiz-answers">';
+  q.a.forEach((ans, i) => {
+    html += '<button class="quiz-answer-btn" onclick="answer(' + i + ')">' + ans.t + '</button>';
+  });
+  html += '</div><p class="quiz-progress">Question ' + (currentQ + 1) + ' / ' + QUESTIONS.length + '</p></div>';
+  root.innerHTML = html;
+}
+
+function answer(i) {
+  let pts = QUESTIONS[currentQ].a[i].pts;
+  for (let k in pts) { scores[k] = (scores[k] || 0) + pts[k]; }
+  currentQ++;
+  render();
+}
+
+render();
+</script>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <p class="logo footer-logo">M&eacute;thode <span>Malta</span></p>
+      <p class="footer-tag">La s&eacute;duction, racont&eacute;e honn&ecirc;tement, de l'autre c&ocirc;t&eacute; de l'approche.</p>
+    </div>
+    <div class="footer-cols">
+      <div>
+        <p class="footer-h">Le blog</p>
+        <a href="blog/negging.html">Le négging en séduction</a>
+<a href="blog/coach-seduction.html">Coach en séduction avis : ce que ces formations à 400 euros la séance vendent vraiment</a>
+<a href="blog/trois-piliers.html">La méthode de séduction en trois piliers des gourous du game</a>
+<a href="blog/femme-remarque.html">Qu'est-ce qui attire une femme chez un homme</a>
+<a href="blog/boite-de-nuit.html">Draguer en boîte de nuit sans passer pour le mec qui a suivi un stage</a>
+      </div>
+      <div>
+        <p class="footer-h">Le site</p>
+        <a href="methode.html">La M&eacute;thode Malta</a>
+        <a href="a-propos.html">&Agrave; propos</a>
+        <a href="quiz.html">Le quiz</a>
+      </div>
+    </div>
+  </div>
+  <div class="wrap footer-legal">
+    <p>Contenu &eacute;ditorial &agrave; vis&eacute;e informative, sans promesse de r&eacute;sultat garanti. &Ccopy; 2026 Méthode Malta.</p>
+  </div>
+</footer>
+</body>
+</html>
